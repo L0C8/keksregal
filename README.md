@@ -1,5 +1,8 @@
 # keksregal
 
+## About
+Keksregal is a cookie analysis tool
+
 ## Run as a Chrome extension
 
 1. Open `chrome://extensions` in Chrome.
