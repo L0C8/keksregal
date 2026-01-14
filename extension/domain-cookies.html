@@ -3,46 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Domain Cookies - keksregal</title>
+  <link rel="stylesheet" href="styles/theme.css">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-    }
-
-    :root {
-      color-scheme: light dark;
-      --bg: #f5f5f5;
-      --panel: #ffffff;
-      --panel-muted: #fafafa;
-      --text: #333333;
-      --muted: #666666;
-      --muted-strong: #777777;
-      --border: #e0e0e0;
-      --accent: #667eea;
-      --accent-strong: #5568d3;
-      --danger: #d32f2f;
-      --success: #2e7d32;
-      --header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f1115;
-        --panel: #171a21;
-        --panel-muted: #12151b;
-        --text: #e6e6e6;
-        --muted: #a2a7b0;
-        --muted-strong: #8c919a;
-        --border: #2a2f3a;
-        --accent: #8da2ff;
-        --accent-strong: #6f86ff;
-        --danger: #ff6b6b;
-        --success: #8fe7a7;
-        --header-gradient: linear-gradient(135deg, #2a325e 0%, #3a2554 100%);
-        --shadow: 0 2px 12px rgba(0,0,0,0.35);
-      }
     }
 
     body {
@@ -152,8 +118,8 @@
     }
 
     .search-input.domain-search:focus {
-      border-color: #f39c12;
-      box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.15);
+      border-color: var(--domain-focus);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--domain-focus) 20%, transparent);
     }
 
     .search-input::placeholder {
@@ -355,8 +321,8 @@
     }
 
     .flag-badge.yes {
-      background: color-mix(in srgb, var(--success, #2e7d32) 18%, var(--panel));
-      color: var(--success, #2e7d32);
+      background: color-mix(in srgb, var(--success) 18%, var(--panel));
+      color: var(--success);
     }
 
     .flag-badge.no {
@@ -397,7 +363,7 @@
     }
 
     button.danger:hover {
-      background: color-mix(in srgb, var(--danger) 80%, #000);
+      background: color-mix(in srgb, var(--danger) 80%, var(--mix-dark));
       box-shadow: 0 4px 8px color-mix(in srgb, var(--danger) 35%, transparent);
     }
 

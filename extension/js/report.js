@@ -194,11 +194,11 @@ function renderCookiesList(cookies, totalCount) {
               </div>
               <div>
                 <span style="color: var(--muted);">Secure:</span> 
-                <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; ${cookie.secure ? 'background: color-mix(in srgb, var(--success, #2e7d32) 18%, var(--panel)); color: var(--success, #2e7d32);' : 'background: color-mix(in srgb, var(--danger) 18%, var(--panel)); color: var(--danger);'}">${cookie.secure ? '✓ Yes' : '✗ No'}</span>
+                <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; ${cookie.secure ? 'background: color-mix(in srgb, var(--success) 18%, var(--panel)); color: var(--success);' : 'background: color-mix(in srgb, var(--danger) 18%, var(--panel)); color: var(--danger);'}">${cookie.secure ? '✓ Yes' : '✗ No'}</span>
               </div>
               <div>
                 <span style="color: var(--muted);">HttpOnly:</span> 
-                <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; ${cookie.httpOnly ? 'background: color-mix(in srgb, var(--success, #2e7d32) 18%, var(--panel)); color: var(--success, #2e7d32);' : 'background: color-mix(in srgb, var(--danger) 18%, var(--panel)); color: var(--danger);'}">${cookie.httpOnly ? '✓ Yes' : '✗ No'}</span>
+                <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; ${cookie.httpOnly ? 'background: color-mix(in srgb, var(--success) 18%, var(--panel)); color: var(--success);' : 'background: color-mix(in srgb, var(--danger) 18%, var(--panel)); color: var(--danger);'}">${cookie.httpOnly ? '✓ Yes' : '✗ No'}</span>
               </div>
               <div>
                 <span style="color: var(--muted);">SameSite:</span> 
