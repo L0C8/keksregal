@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cookie Analysis Report - keksregal</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f5f5;
+      --panel: #ffffff;
+      --panel-muted: #fafafa;
+      --text: #333333;
+      --muted: #666666;
+      --muted-strong: #777777;
+      --border: #e0e0e0;
+      --accent: #667eea;
+      --accent-strong: #5568d3;
+      --danger: #d32f2f;
+      --warning: #f57c00;
+      --success: #2e7d32;
+      --tab-bg: #f5f5f5;
+      --tab-border: #e0e0e0;
+      --header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1115;
+        --panel: #171a21;
+        --panel-muted: #12151b;
+        --text: #e6e6e6;
+        --muted: #a2a7b0;
+        --muted-strong: #8c919a;
+        --border: #2a2f3a;
+        --accent: #8da2ff;
+        --accent-strong: #6f86ff;
+        --danger: #ff6b6b;
+        --warning: #ffb14a;
+        --success: #6bd38a;
+        --tab-bg: #141823;
+        --tab-border: #2a2f3a;
+        --header-gradient: linear-gradient(135deg, #2a325e 0%, #3a2554 100%);
+        --shadow: 0 2px 12px rgba(0,0,0,0.35);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--panel);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--header-gradient);
+      color: white;
+      padding: 30px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .scan-time {
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 30px;
+      background: var(--panel-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-card {
+      background: var(--panel);
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .summary-card.warning {
+      border-left-color: var(--warning);
+    }
+
+    .summary-card.danger {
+      border-left-color: var(--danger);
+    }
+
+    .summary-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .summary-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 20px;
+      color: var(--text);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .abnormality-list {
+      display: grid;
+      gap: 15px;
+    }
+
+    .abnormality-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 15px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .abnormality-item.high {
+      border-left-color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 18%, var(--panel));
+    }
+
+    .abnormality-item.medium {
+      border-left-color: var(--warning);
+      background: color-mix(in srgb, var(--warning) 18%, var(--panel));
+    }
+
+    .abnormality-item.low {
+      border-left-color: #ffc107;
+      background: color-mix(in srgb, #ffc107 18%, var(--panel));
+    }
+
+    .abnormality-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .issue-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .issue-delete-btn {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--danger);
+      border-radius: 6px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .issue-delete-btn:hover {
+      background: color-mix(in srgb, var(--danger) 16%, var(--panel));
+      border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+    }
+
+    .issue-delete-btn:disabled {
+      color: var(--muted-strong);
+      background: var(--panel-muted);
+      cursor: not-allowed;
+    }
+
+    .abnormality-name {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .abnormality-severity {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .abnormality-severity.high {
+      background: var(--danger);
+      color: white;
+    }
+
+    .abnormality-severity.medium {
+      background: var(--warning);
+      color: white;
+    }
+
+    .abnormality-severity.low {
+      background: #ffc107;
+      color: #333;
+    }
+
+    .abnormality-domain {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .abnormality-description {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      padding: 10px 20px;
+      background: var(--tab-bg);
+      border: 2px solid var(--tab-border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+      background: color-mix(in srgb, var(--tab-bg) 75%, var(--panel));
+      border-color: var(--border);
+    }
+
+    .filter-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .filter-tab .count {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .filter-tab.active .count {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .abnormality-item.hidden {
+      display: none;
+    }
+
+    .view-switcher {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .view-tab {
+      padding: 15px 30px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 0;
+    }
+
+    .view-tab:hover {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    .view-content {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .domain-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+    }
+
+    .domain-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--panel-muted);
+      border-radius: 4px;
+      font-size: 13px;
+      transition: all 0.2s;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .domain-item:hover {
+      background: color-mix(in srgb, var(--panel-muted) 70%, var(--panel));
+    }
+
+    .domain-item.selected {
+      background: color-mix(in srgb, var(--accent) 15%, var(--panel));
+      border: 2px solid var(--accent);
+      padding: 10px;
+    }
+
+    .domain-checkbox {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .domain-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .domain-name {
+      color: var(--text);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .domain-count {
+      color: var(--accent);
+      font-weight: 600;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+
+    .domain-actions {
+      display: flex;
+      gap: 5px;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+
+    .info-domain-btn,
+    .delete-domain-btn {
+      background: color-mix(in srgb, var(--accent) 20%, var(--panel));
+      color: var(--accent);
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+
+    .info-domain-btn:hover {
+      background: var(--accent);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .delete-domain-btn {
+      background: color-mix(in srgb, var(--danger) 20%, var(--panel));
+      color: var(--danger);
+    }
+
+    .delete-domain-btn:hover {
+      background: var(--danger);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .info-domain-btn:active,
+    .delete-domain-btn:active {
+      transform: scale(0.95);
+    }
+
+    .domain-item.expanded {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 15px;
+    }
+
+    .domain-cookies-list {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border);
+    }
+
+    .cookie-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      background: var(--panel-muted);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .cookie-name {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .cookie-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+    }
+
+    .cookie-detail {
+      font-size: 11px;
+    }
+
+    .cookie-detail strong {
+      color: var(--text);
+    }
+
+    .domain-selection-toolbar {
+      background: var(--header-gradient);
+      color: white;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .toolbar-info {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .toolbar-btn {
+      padding: 8px 16px;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      margin: 0;
+    }
+
+    .toolbar-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .toolbar-btn.danger {
+      background: var(--danger);
+      border-color: color-mix(in srgb, var(--danger) 70%, #000);
+    }
+
+    .toolbar-btn.danger:hover {
+      background: color-mix(in srgb, var(--danger) 80%, #000);
+      box-shadow: 0 4px 8px color-mix(in srgb, var(--danger) 35%, transparent);
+    }
+
+    .toolbar-btn.secondary {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted-strong);
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .recommendations {
+      background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+      border-left: 4px solid var(--accent);
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+
+    .recommendations h3 {
+      color: var(--accent);
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .recommendations ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .recommendations li {
+      padding: 8px 0;
+      padding-left: 24px;
+      position: relative;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .recommendations li:before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .actions {
+      padding: 30px;
+      background: var(--panel-muted);
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    button {
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin: 0 5px;
+    }
+
+    button:hover {
+      background: var(--accent-strong);
+    }
+
+    button.secondary {
+      background: var(--panel);
+      color: var(--accent);
+      border: 2px solid var(--accent);
+    }
+
+    button.secondary:hover {
+      background: var(--panel-muted);
+    }
+
+    input[type="search"]::placeholder {
+      color: var(--muted-strong);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><img src="icons/icon48.png" alt="keksregal" style="width: 28px; height: 28px; vertical-align: -4px; margin-right: 8px;">Keksregal</h1>
+      <p class="subtitle">Privacy & Security Assessment</p>
+      <p class="scan-time" id="scanTime">Loading...</p>
+    </header>
+
+    <div class="summary">
+      <div class="summary-card">
+        <div class="summary-label">Total Cookies</div>
+        <div class="summary-value" id="totalCookies">0</div>
+      </div>
+      <div class="summary-card warning">
+        <div class="summary-label">Third-Party</div>
+        <div class="summary-value" id="thirdParty">0</div>
+      </div>
+      <div class="summary-card danger">
+        <div class="summary-label">Security Issues</div>
+        <div class="summary-value" id="securityIssues">0</div>
+      </div>
+      <div class="summary-card warning">
+        <div class="summary-label">Privacy Concerns</div>
+        <div class="summary-value" id="privacyConcerns">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Total Issues</div>
+        <div class="summary-value" id="totalIssues">0</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- View Switcher -->
+      <div class="view-switcher">
+        <button class="view-tab active" data-view="home">
+          🏠 Home
+        </button>
+        <button class="view-tab" data-view="issues">
+          🔍 Detected Issues
+        </button>
+        <button class="view-tab" data-view="domains">
+          🌐 Cookies by Domain
+        </button>
+        <button class="view-tab" data-view="cookies">
+          <img src="icons/icon16.png" alt="" style="width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px;">All Cookies
+        </button>
+      </div>
+
+      <!-- Home View -->
+      <section id="homeView" class="view-content">
+        <div class="actions" style="padding: 0; background: transparent; border-top: none;">
+          <button id="exportBtn">Export Report</button>
+          <button id="clearCookiesBtn" class="secondary">Clear Problematic Cookies</button>
+          <button id="scanAgainBtn" class="secondary">Scan Again</button>
+        </div>
+      </section>
+
+      <!-- Issues View -->
+      <section id="issuesView" class="view-content" style="display: none;">
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px;">🔍 Search Issues</div>
+          <div style="font-size: 12px; color: var(--muted-strong); margin-bottom: 8px;">e.g., *auth*, tracking, .google.com</div>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 12px; top: 10px; font-size: 14px;">🔍</span>
+            <input id="issuesSearch" type="search" placeholder="Filter issues by cookie, domain, or description..." style="width: 100%; padding: 12px 14px 12px 36px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--panel); color: var(--text);">
+          </div>
+        </div>
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <div class="filter-tab active" data-category="all">
+            All Issues <span class="count" id="countAll">0</span>
+          </div>
+          <div class="filter-tab" data-category="security">
+            🔒 Security <span class="count" id="countSecurity">0</span>
+          </div>
+          <div class="filter-tab" data-category="privacy">
+            👁️ Privacy <span class="count" id="countPrivacy">0</span>
+          </div>
+          <div class="filter-tab" data-category="tracking">
+            📊 Tracking <span class="count" id="countTracking">0</span>
+          </div>
+          <div class="filter-tab" data-category="suspicious">
+            ⚠️ Suspicious <span class="count" id="countSuspicious">0</span>
+          </div>
+          <div class="filter-tab" data-category="high">
+            High Severity <span class="count" id="countHigh">0</span>
+          </div>
+        </div>
+
+        <div id="abnormalities" class="abnormality-list"></div>
+        <div id="issuesPagination" style="display: none; align-items: center; justify-content: space-between; margin-top: 16px; gap: 12px;">
+          <button id="issuesPrev" class="secondary" style="padding: 8px 12px;">← Prev</button>
+          <div id="issuesPageInfo" style="font-size: 13px; color: var(--muted);"></div>
+          <button id="issuesNext" class="secondary" style="padding: 8px 12px;">Next →</button>
+        </div>
+      </section>
+
+      <!-- Domains View -->
+      <section id="domainsView" class="view-content" style="display: none;">
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px;">🌐 Search by Domain/Site/IP</div>
+          <div style="font-size: 12px; color: var(--muted-strong); margin-bottom: 8px;">e.g., *oogle.com, 192.168.*, *.example.com</div>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 12px; top: 10px; font-size: 14px;">🔍</span>
+            <input id="domainSearch" type="search" placeholder="Filter domains..." style="width: 100%; padding: 12px 14px 12px 36px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--panel); color: var(--text);">
+          </div>
+        </div>
+        <div class="domain-selection-toolbar" style="display: none;">
+          <div class="toolbar-info">
+            <span id="selectedCount">0</span> domain(s) selected
+          </div>
+          <div class="toolbar-actions">
+            <button id="deleteSelectedBtn" class="toolbar-btn danger">Delete Selected</button>
+            <button id="clearSelectionBtn" class="toolbar-btn secondary">Clear Selection</button>
+          </div>
+        </div>
+        <div id="domains" class="domain-list"></div>
+      </section>
+
+      <!-- All Cookies View -->
+      <section id="cookiesView" class="view-content" style="display: none;">
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px;">
+            <img src="icons/icon16.png" alt="" style="width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px;">Search by Cookie Name/Value
+          </div>
+          <div style="font-size: 12px; color: var(--muted-strong); margin-bottom: 8px;">e.g., session*, *auth*, user_*</div>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 12px; top: 10px; font-size: 14px;">🔍</span>
+            <input id="cookieSearch" type="search" placeholder="Filter cookies..." style="width: 100%; padding: 12px 14px 12px 36px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--panel); color: var(--text);">
+          </div>
+        </div>
+        <div id="cookieSelectionToolbar" class="domain-selection-toolbar" style="display: none; margin-bottom: 16px;">
+          <div class="toolbar-info">
+            <span id="selectedCookieCount">0</span> cookie(s) selected
+          </div>
+          <div class="toolbar-actions">
+            <button id="deleteSelectedCookiesBtn" class="toolbar-btn danger">Delete All Selected</button>
+            <button id="clearCookieSelectionBtn" class="toolbar-btn secondary">Clear Selection</button>
+          </div>
+        </div>
+        <div id="cookiesList"></div>
+      </section>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/report.js"></script>
+</body>
+</html>
