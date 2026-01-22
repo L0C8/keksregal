@@ -249,6 +249,89 @@ async function deleteInsecureCookies() {
         await refreshCookies();
     }
 }
+async function deleteCookiesByDateRange() {
+    const beforeDateInput = document.getElementById('beforeDate').value;
+    const afterDateInput = document.getElementById('afterDate').value;
+
+    if (!beforeDateInput && !afterDateInput) {
+        alert('Please select at least one date (before or after) to filter cookies.');
+        return;
+    }
+
+    let cookiesToDelete = currentCookies;
+    const beforeDate = beforeDateInput ? new Date(beforeDateInput).getTime() / 1000 : null;
+    const afterDate = afterDateInput ? new Date(afterDateInput).getTime() / 1000 : null;
+
+    // Filter cookies based on expiration date
+    cookiesToDelete = currentCookies.filter(cookie => {
+        // Session cookies (no expiration date) - treat as infinite future
+        if (!cookie.expirationDate) {
+            // Only delete session cookies if we're looking for cookies "after" a date
+            // (since they effectively never expire)
+            return false;
+        }
+
+        const expirationTime = cookie.expirationDate;
+
+        // If both dates are specified, cookie must expire between them
+        if (beforeDate && afterDate) {
+            return expirationTime <= beforeDate && expirationTime >= afterDate;
+        }
+
+        // If only before date is specified, cookie must expire before it
+        if (beforeDate) {
+            return expirationTime <= beforeDate;
+        }
+
+        // If only after date is specified, cookie must expire after it
+        if (afterDate) {
+            return expirationTime >= afterDate;
+        }
+
+        return false;
+    });
+
+    if (cookiesToDelete.length === 0) {
+        alert('No cookies found matching the specified date range.');
+        return;
+    }
+
+    const dateRangeText = beforeDateInput && afterDateInput
+        ? `between ${afterDateInput} and ${beforeDateInput}`
+        : beforeDateInput
+        ? `expiring before ${beforeDateInput}`
+        : `expiring after ${afterDateInput}`;
+
+    if (!confirm(`Delete ${cookiesToDelete.length} cookie${cookiesToDelete.length !== 1 ? 's' : ''} ${dateRangeText}? This cannot be undone.`)) {
+        return;
+    }
+
+    let deletedCount = 0;
+    try {
+        for (const cookie of cookiesToDelete) {
+            const url = `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`;
+            await chrome.cookies.remove({
+                url: url,
+                name: cookie.name
+            });
+            deletedCount++;
+        }
+        alert(`Successfully deleted ${deletedCount} cookie${deletedCount !== 1 ? 's' : ''}`);
+
+        // Clear date inputs
+        document.getElementById('beforeDate').value = '';
+        document.getElementById('afterDate').value = '';
+
+        // Refresh the display
+        await refreshCookies();
+    }
+    catch (error) {
+        console.error('Error deleting cookies:', error);
+        alert(`Deleted ${deletedCount} cookies before error occurred.`);
+        await refreshCookies();
+    }
+}
+
 // Button handlers
 document.getElementById('backBtn').addEventListener('click', () => {
     // Try to go back in history, otherwise close the tab
@@ -261,6 +344,7 @@ document.getElementById('backBtn').addEventListener('click', () => {
 });
 document.getElementById('deleteAllBtn').addEventListener('click', deleteAllCookies);
 document.getElementById('deleteInsecureBtn').addEventListener('click', deleteInsecureCookies);
+document.getElementById('deleteDateRangeBtn').addEventListener('click', deleteCookiesByDateRange);
 document.getElementById('refreshBtn').addEventListener('click', refreshCookies);
 // Search functionality
 function setupSearch() {

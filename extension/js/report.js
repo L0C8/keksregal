@@ -375,6 +375,11 @@ function setupCookieSelectionToolbar() {
         return;
     deleteBtn.addEventListener('click', deleteSelectedCookies);
     clearBtn.addEventListener('click', clearCookieSelection);
+    // Setup date range deletion
+    const deleteDateRangeBtn = document.getElementById('deleteDateRangeAllCookiesBtn');
+    if (deleteDateRangeBtn) {
+        deleteDateRangeBtn.addEventListener('click', deleteCookiesByDateRange);
+    }
 }
 
 function attachCookieSelectionHandlers() {
@@ -457,6 +462,99 @@ async function deleteSelectedCookies() {
     }
 }
 
+async function deleteCookiesByDateRange() {
+    const beforeDateInput = document.getElementById('beforeDateAllCookies').value;
+    const afterDateInput = document.getElementById('afterDateAllCookies').value;
+
+    if (!beforeDateInput && !afterDateInput) {
+        alert('Please select at least one date (before or after) to filter cookies.');
+        return;
+    }
+
+    if (!analysisData || !analysisData.cookies) {
+        alert('No cookies available to delete.');
+        return;
+    }
+
+    const beforeDate = beforeDateInput ? new Date(beforeDateInput).getTime() / 1000 : null;
+    const afterDate = afterDateInput ? new Date(afterDateInput).getTime() / 1000 : null;
+
+    // Filter cookies based on expiration date
+    const cookiesToDelete = analysisData.cookies.filter(cookie => {
+        // Session cookies (no expiration date)
+        if (!cookie.expirationDate) {
+            return false;
+        }
+
+        const expirationTime = cookie.expirationDate;
+
+        // If both dates are specified, cookie must expire between them
+        if (beforeDate && afterDate) {
+            return expirationTime <= beforeDate && expirationTime >= afterDate;
+        }
+
+        // If only before date is specified, cookie must expire before it
+        if (beforeDate) {
+            return expirationTime <= beforeDate;
+        }
+
+        // If only after date is specified, cookie must expire after it
+        if (afterDate) {
+            return expirationTime >= afterDate;
+        }
+
+        return false;
+    });
+
+    if (cookiesToDelete.length === 0) {
+        alert('No cookies found matching the specified date range.');
+        return;
+    }
+
+    const dateRangeText = beforeDateInput && afterDateInput
+        ? `between ${afterDateInput} and ${beforeDateInput}`
+        : beforeDateInput
+        ? `expiring before ${beforeDateInput}`
+        : `expiring after ${afterDateInput}`;
+
+    if (!confirm(`Delete ${cookiesToDelete.length} cookie${cookiesToDelete.length !== 1 ? 's' : ''} ${dateRangeText}? This cannot be undone.`)) {
+        return;
+    }
+
+    let deletedCount = 0;
+    try {
+        for (const cookie of cookiesToDelete) {
+            const url = `http${cookie.secure ? 's' : ''}://${cookie.domain}${cookie.path}`;
+            await chrome.cookies.remove({ url: url, name: cookie.name });
+            deletedCount++;
+        }
+
+        // Update analysis data
+        if (analysisData) {
+            const deletedKeys = new Set(cookiesToDelete.map(c => buildCookieKey(c.name, c.domain, c.path, c.secure)));
+            analysisData.cookies = analysisData.cookies.filter(cookie => !deletedKeys.has(buildCookieKey(cookie.name, cookie.domain, cookie.path, cookie.secure)));
+            analysisData = analyzeCookies(analysisData.cookies, currentScanDomain);
+            await chrome.storage.local.set({ cookieAnalysis: analysisData });
+            allAbnormalities = analysisData.abnormalities;
+            allCookies = analysisData.cookies ? [...analysisData.cookies].sort((a, b) => a.name.localeCompare(b.name)) : [];
+            displaySummary(analysisData);
+            displayDomains(analysisData.domains);
+            updateIssuesView();
+            applyCookieSearch();
+        }
+
+        alert(`Successfully deleted ${deletedCount} cookie${deletedCount !== 1 ? 's' : ''}`);
+
+        // Clear date inputs
+        document.getElementById('beforeDateAllCookies').value = '';
+        document.getElementById('afterDateAllCookies').value = '';
+    }
+    catch (error) {
+        console.error('Error deleting cookies:', error);
+        alert(`Deleted ${deletedCount} cookies before error occurred.`);
+    }
+}
+
 function buildCookieKey(name, domain, path, secure) {
     return `${name}||${domain}||${path}||${secure ? '1' : '0'}`;
 }
@@ -522,7 +620,7 @@ function updateIssuesView() {
             <button class="issue-delete-btn" data-cookie-name="${escapeHtml(abn.cookieName)}" data-cookie-domain="${escapeHtml(abn.domain)}" ${abn.domain === 'multiple' ? 'disabled' : ''} title="${abn.domain === 'multiple' ? 'Cannot delete aggregated duplicate entries' : `Delete cookies for ${escapeHtml(abn.cookieName)} on ${escapeHtml(abn.domain)}`}">
               ❌
             </button>
-            <div class="abnormality-severity ${abn.severity}">${abn.severity}</div>
+            <div class="abnormality-severity ${abn.severity}">${abn.severity === 'high' ? 'risk' : abn.severity}</div>
           </div>
         </div>
         <div class="abnormality-domain">Domain: ${escapeHtml(abn.domain)}</div>
